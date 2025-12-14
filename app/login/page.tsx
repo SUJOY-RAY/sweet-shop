@@ -3,6 +3,19 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Navbar from '../components/Navbar';
+import { post } from '@/utils/http';
+
+interface LoginResponse {
+  token: string;
+  user: {
+    id: number;
+    name: string;
+    email: string;
+    role: 'ADMIN' | 'USER';
+  };
+  error?: string;
+}
+
 
 export default function LoginPage() {
   const router = useRouter();
@@ -14,19 +27,16 @@ export default function LoginPage() {
     e.preventDefault();
     setError('');
     try {
-      const res = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error('Invalid credentials');
+      const data = await post<LoginResponse>('/api/auth/login', { email, password });
+
+      if (!data.token) throw new Error(data.error || 'Login failed');
 
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
 
-
-      router.push('/dashboard');
+      // Redirect based on role
+      if (data.user.role === 'ADMIN') router.push('/dashboard/admin');
+      else router.push('/dashboard/user');
     } catch (err: any) {
       setError(err.message || 'Login failed');
     }

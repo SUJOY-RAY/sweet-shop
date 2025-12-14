@@ -24,6 +24,7 @@ model Sweet {
   category  String
   imageUrl  String?
   createdAt DateTime @default(now())
+  quantity Int @default(0)
 
   cartItems CartItem[]
 }

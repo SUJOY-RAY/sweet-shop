@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Navbar from '../../components/Navbar';
 import SweetCard from '../../components/SweetCard';
+import { get, post, put, del } from '@/utils/http';
 
 interface Sweet {
   id: number;
@@ -20,11 +21,12 @@ export default function AdminDashboard() {
   const [showForm, setShowForm] = useState(false);
   const [editingSweet, setEditingSweet] = useState<Sweet | null>(null);
 
-  // Form state
   const [name, setName] = useState('');
   const [price, setPrice] = useState('');
   const [category, setCategory] = useState('');
   const [imageUrl, setImageUrl] = useState('');
+
+  const token = localStorage.getItem('token');
 
   useEffect(() => {
     const userRaw = localStorage.getItem('user');
@@ -45,8 +47,7 @@ export default function AdminDashboard() {
   async function fetchSweets() {
     setLoading(true);
     try {
-      const res = await fetch('/api/sweets');
-      const data = await res.json();
+      const data = await get<Sweet[]>('/api/sweets', token || '');
       setSweets(data);
     } catch (err) {
       console.error(err);
@@ -57,8 +58,12 @@ export default function AdminDashboard() {
 
   const handleDelete = async (id: number) => {
     if (!confirm('Are you sure you want to delete this sweet?')) return;
-    await fetch(`/api/sweets/${id}`, { method: 'DELETE' });
-    setSweets(prev => prev.filter(s => s.id !== id));
+    try {
+      await del(`/api/sweets/${id}`, token || '');
+      setSweets(prev => prev.filter(s => s.id !== id));
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const handleEdit = (sweet: Sweet) => {
@@ -76,20 +81,10 @@ export default function AdminDashboard() {
 
     try {
       if (editingSweet) {
-        const res = await fetch(`/api/sweets/${editingSweet.id}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        });
-        const updated = await res.json();
+        const updated = await put<Sweet>(`/api/sweets/${editingSweet.id}`, payload, token || '');
         setSweets(prev => prev.map(s => s.id === updated.id ? updated : s));
       } else {
-        const res = await fetch('/api/sweets', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        });
-        const newSweet = await res.json();
+        const newSweet = await post<Sweet>('/api/sweets', payload, token || '');
         setSweets(prev => [newSweet, ...prev]);
       }
 

@@ -1,4 +1,5 @@
 'use client';
+import { get, post, put, del } from '@/utils/http';
 
 interface Sweet {
   id: number;
@@ -24,18 +25,19 @@ export default function SweetCard({ sweet, isAdmin = false, onEdit, onDelete }: 
       return;
     }
 
-    const res = await fetch("/api/cart/add", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ sweetId, quantity: 1 }),
-    });
+    try {
+      const data = await post<{ success: boolean; error?: string }>(
+        "/api/cart/add",
+        { sweetId, quantity: 1 },
+        token
+      );
 
-    const data = await res.json();
-    if (data.success) alert("Added to cart!");
-    else alert(data.error || "Failed to add to cart");
+      if (data.success) alert("Added to cart!");
+      else alert(data.error || "Failed to add to cart");
+    } catch (err) {
+      console.error(err);
+      alert("Something went wrong while adding to cart");
+    }
   };
 
   return (

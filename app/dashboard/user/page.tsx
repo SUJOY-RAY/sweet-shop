@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Navbar from '../../components/Navbar';
 import CartCard from '../../components/CartCard';
+import { get, del } from '@/utils/http';
 
 interface Sweet {
   id: number;
@@ -19,47 +20,46 @@ interface CartItem {
   quantity: number;
 }
 
+interface CartResponse {
+  items: CartItem[];
+}
+
 export default function UserDashboard() {
   const router = useRouter();
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const getToken = () =>
+    typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+
   useEffect(() => {
-    const token = localStorage.getItem('token');
+    const token = getToken();
     if (!token) {
       router.push('/login');
       return;
     }
 
-    async function fetchCart() {
+    const fetchCart = async () => {
       try {
-        const res = await fetch('/api/cart', {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (!res.ok) throw new Error('Failed to fetch cart');
-        const data = await res.json();
-        setCartItems(data.items);
+        const data = await get<CartResponse>('/api/cart', token);
+        setCartItems(data.items ?? []);
       } catch (err) {
         console.error(err);
       } finally {
         setLoading(false);
       }
-    }
+    };
 
     fetchCart();
   }, [router]);
 
   const handleRemove = async (itemId: number) => {
-    const token = localStorage.getItem('token');
+    const token = getToken();
     if (!token) return;
 
     try {
-      const res = await fetch(`/api/cart/remove/${itemId}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!res.ok) throw new Error('Failed to remove item');
-      setCartItems(cartItems.filter(item => item.id !== itemId));
+      await del<{ success: boolean }>(`/api/cart/remove/${itemId}`, token);
+      setCartItems(prev => prev.filter(item => item.id !== itemId));
     } catch (err) {
       console.error(err);
     }
@@ -68,8 +68,11 @@ export default function UserDashboard() {
   return (
     <div className="min-h-screen bg-pink-50">
       <Navbar />
+
       <main className="max-w-7xl mx-auto px-6 py-12">
-        <h1 className="text-3xl font-bold text-pink-700 mb-6">Your Cart</h1>
+        <h1 className="text-3xl font-bold text-pink-700 mb-6">
+          Your Cart
+        </h1>
 
         {loading ? (
           <p className="text-pink-500">Loading your cart...</p>
@@ -84,7 +87,11 @@ export default function UserDashboard() {
                 onRemove={handleRemove}
                 onQuantityChange={(itemId, newQuantity) => {
                   setCartItems(prev =>
-                    prev.map(ci => (ci.id === itemId ? { ...ci, quantity: newQuantity } : ci))
+                    prev.map(ci =>
+                      ci.id === itemId
+                        ? { ...ci, quantity: newQuantity }
+                        : ci
+                    )
                   );
                 }}
               />

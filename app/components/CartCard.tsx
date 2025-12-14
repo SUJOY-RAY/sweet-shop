@@ -1,4 +1,6 @@
 'use client';
+import { put } from '@/utils/http';
+import { useState } from 'react';
 
 interface Sweet {
   id: number;
@@ -21,47 +23,41 @@ interface CartCardProps {
 }
 
 export default function CartCard({ item, onRemove, onQuantityChange }: CartCardProps) {
-  const handleIncrement = async () => {
-    const token = localStorage.getItem('token');
+  const token = localStorage.getItem('token');
+  const [quantity, setQuantity] = useState(item.quantity);
+
+  const updateQuantity = async (newQuantity: number) => {
+    if (newQuantity < 1) return;
+
+    setQuantity(newQuantity);
+    onQuantityChange?.(item.id, newQuantity);
+
     if (!token) return;
 
-    const newQuantity = item.quantity + 1;
     try {
-      const res = await fetch('/api/cart/update', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ cartItemId: item.id, quantity: newQuantity }),
-      });
-      if (!res.ok) throw new Error('Failed to update quantity');
-      onQuantityChange?.(item.id, newQuantity);
+      const res = await put<{ success: boolean; error?: string }>(
+        '/api/cart/update',
+        { cartItemId: item.id, quantity: newQuantity },
+        token
+      );
+
+      if (!res.success) {
+        console.error(res.error || 'Failed to update quantity');
+        setQuantity(item.quantity);
+        onQuantityChange?.(item.id, item.quantity);
+      }
     } catch (err) {
       console.error(err);
+      setQuantity(item.quantity);
+      onQuantityChange?.(item.id, item.quantity);
     }
   };
 
-  const handleDecrement = async () => {
-    if (item.quantity <= 1) return;
-    const token = localStorage.getItem('token');
-    if (!token) return;
-
-    const newQuantity = item.quantity - 1;
-    try {
-      const res = await fetch('/api/cart/update', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ cartItemId: item.id, quantity: newQuantity }),
-      });
-      if (!res.ok) throw new Error('Failed to update quantity');
-      onQuantityChange?.(item.id, newQuantity);
-    } catch (err) {
-      console.error(err);
-    }
+  const handleIncrement = () => updateQuantity(quantity + 1);
+  const handleDecrement = () => updateQuantity(quantity - 1);
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = parseInt(e.target.value);
+    if (!isNaN(val)) updateQuantity(val);
   };
 
   return (
@@ -72,7 +68,7 @@ export default function CartCard({ item, onRemove, onQuantityChange }: CartCardP
         className="object-cover w-full h-40 rounded-lg mb-2"
       />
       <h3 className="font-bold text-lg">{item.sweet.name}</h3>
-      <p className="text-pink-500 font-semibold">₹{item.sweet.price * item.quantity}</p>
+      <p className="text-pink-500 font-semibold">₹{item.sweet.price * quantity}</p>
 
       <div className="flex items-center gap-2 mt-2 mb-2">
         <button
@@ -81,7 +77,13 @@ export default function CartCard({ item, onRemove, onQuantityChange }: CartCardP
         >
           -
         </button>
-        <span className="font-semibold">{item.quantity}</span>
+        <input
+          type="number"
+          value={quantity}
+          onChange={handleInputChange}
+          className="w-10 text-center border rounded appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+          min={1}
+        />
         <button
           onClick={handleIncrement}
           className="bg-gray-200 text-gray-700 px-2 py-1 rounded hover:bg-gray-300 transition"

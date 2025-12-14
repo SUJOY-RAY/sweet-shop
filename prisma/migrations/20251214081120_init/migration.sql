@@ -17,6 +17,7 @@ CREATE TABLE "Sweet" (
     "category" TEXT NOT NULL,
     "imageUrl" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "quantity" INTEGER NOT NULL DEFAULT 0,
 
     CONSTRAINT "Sweet_pkey" PRIMARY KEY ("id")
 );
@@ -36,6 +37,7 @@ CREATE TABLE "CartItem" (
     "cartId" INTEGER NOT NULL,
     "sweetId" INTEGER NOT NULL,
     "quantity" INTEGER NOT NULL DEFAULT 1,
+    "price" INTEGER NOT NULL DEFAULT 0,
 
     CONSTRAINT "CartItem_pkey" PRIMARY KEY ("id")
 );
