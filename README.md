@@ -1,5 +1,7 @@
 # Sweet Shop - Full Stack E-Commerce Platform
 
+CHECK THIS OUT AT : https://sweet-shop-nine-cyan.vercel.app/
+
 A full-stack e-commerce platform built with **Next.js**, **Prisma**, and **PostgreSQL**, allowing users to browse sweets, manage their cart, and place orders. Admins can manage sweet items (CRUD operations). JWT authentication is used for secure access.
 
 ---
