@@ -32,7 +32,6 @@ export default function AdminDashboard() {
 
   const [token, setToken] = useState<string | null>(null);
 
-  /* -------------------- AUTH CHECK -------------------- */
   useEffect(() => {
     const t = localStorage.getItem('token');
     const userRaw = localStorage.getItem('user');
@@ -51,7 +50,6 @@ export default function AdminDashboard() {
     setToken(t);
   }, [router]);
 
-  /* -------------------- FETCH SWEETS -------------------- */
   useEffect(() => {
     if (!token) return;
     fetchSweets();
@@ -69,7 +67,6 @@ export default function AdminDashboard() {
     }
   };
 
-  /* -------------------- DELETE -------------------- */
   const handleDelete = async (id: number) => {
     if (!confirm('Delete this sweet?')) return;
     try {
@@ -80,7 +77,6 @@ export default function AdminDashboard() {
     }
   };
 
-  /* -------------------- EDIT -------------------- */
   const handleEdit = (sweet: Sweet) => {
     setEditingSweet(sweet);
     setName(sweet.name);
@@ -91,7 +87,6 @@ export default function AdminDashboard() {
     setShowForm(true);
   };
 
-  /* -------------------- SUBMIT FORM -------------------- */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -138,7 +133,6 @@ export default function AdminDashboard() {
     setImageUrl('');
   };
 
-  /* -------------------- UI -------------------- */
   return (
     <div className="min-h-screen bg-pink-50">
       <Navbar />
@@ -160,7 +154,6 @@ export default function AdminDashboard() {
           </button>
         </div>
 
-        {/* ---------- FORM MODAL ---------- */}
         {showForm && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
             <form
@@ -232,7 +225,6 @@ export default function AdminDashboard() {
           </div>
         )}
 
-        {/* ---------- SWEETS GRID ---------- */}
         {loading ? (
           <p>Loading...</p>
         ) : (

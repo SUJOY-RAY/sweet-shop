@@ -57,11 +57,17 @@ export default function UserDashboard() {
     const token = getToken();
     if (!token) return;
 
+    setCartItems(prev => prev.filter(item => item.id !== itemId));
+
     try {
       await del<{ success: boolean }>(`/api/cart/remove/${itemId}`, token);
-      setCartItems(prev => prev.filter(item => item.id !== itemId));
     } catch (err) {
       console.error(err);
+
+      try {
+        const data = await get<CartResponse>('/api/cart', token);
+        setCartItems(data.items ?? []);
+      } catch { }
     }
   };
 
