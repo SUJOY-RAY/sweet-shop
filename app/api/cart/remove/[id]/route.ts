@@ -9,7 +9,6 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    // ✅ MUST await params in Next.js 15+
     const { id } = await params;
     const itemId = Number(id);
 
@@ -38,7 +37,6 @@ export async function DELETE(
       return NextResponse.json({ error: "Item not found" }, { status: 404 });
     }
 
-    // ✅ TRANSACTION: restore stock + delete item
     await prisma.$transaction([
       prisma.sweet.update({
         where: { id: item.sweetId },
