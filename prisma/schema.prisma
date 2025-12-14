@@ -15,6 +15,8 @@ model User {
   role     String @default("USER")
 
   carts Cart[]
+
+  orders Order[]
 }
 model Sweet {
   id        Int      @id @default(autoincrement())
@@ -26,6 +28,8 @@ model Sweet {
   quantity  Int      @default(0)
 
   cartItems CartItem[] 
+
+  orderItems OrderItem[]
 }
 
 model CartItem {
@@ -46,4 +50,32 @@ model Cart {
   userId    Int        @unique
   items     CartItem[] 
   createdAt DateTime   @default(now())
+}
+
+model Order {
+  id        Int         @id @default(autoincrement())
+  user      User        @relation(fields: [userId], references: [id])
+  userId    Int
+  items     OrderItem[]
+  total     Float       @default(0)
+  status    OrderStatus @default(PENDING)
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+}
+
+model OrderItem {
+  id       Int    @id @default(autoincrement())
+  order    Order  @relation(fields: [orderId], references: [id])
+  orderId  Int
+  sweet    Sweet  @relation(fields: [sweetId], references: [id])
+  sweetId  Int
+  quantity Int
+  price    Float  // total price for this item (sweet.price * quantity)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+enum OrderStatus {
+  PENDING
+  COMPLETED
+  CANCELLED
 }
