@@ -16,6 +16,28 @@ interface SweetCardProps {
 }
 
 export default function SweetCard({ sweet, isAdmin = false, onEdit, onDelete }: SweetCardProps) {
+  
+  const handleAddToCart = async (sweetId: number) => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      alert("Please login first!");
+      return;
+    }
+
+    const res = await fetch("/api/cart/add", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ sweetId, quantity: 1 }),
+    });
+
+    const data = await res.json();
+    if (data.success) alert("Added to cart!");
+    else alert(data.error || "Failed to add to cart");
+  };
+
   return (
     <div className="bg-white p-4 rounded-xl shadow flex flex-col">
       <div className="relative w-full h-40 mb-2">
@@ -52,7 +74,10 @@ export default function SweetCard({ sweet, isAdmin = false, onEdit, onDelete }: 
           </button>
         </div>
       ) : (
-        <button className="mt-3 bg-pink-600 text-white px-4 py-1 rounded hover:opacity-90 transition">
+        <button
+          onClick={() => handleAddToCart(sweet.id)}
+          className="mt-3 bg-pink-600 text-white px-4 py-1 rounded hover:opacity-90 transition"
+        >
           Add to Cart
         </button>
       )}

@@ -17,6 +17,18 @@ export default function Navbar() {
             <Link href="/dashboard" className="hover:text-pink-600">Dashboard</Link>
             <Link href="/login" className="hover:text-pink-600">Login</Link>
             <Link href="/register" className="hover:text-pink-600">Register</Link>
+            <Link
+              href="#"
+              onClick={(e) => {
+                e.preventDefault();
+                localStorage.removeItem("token");
+                localStorage.removeItem("user");
+                window.location.href = "/login";
+              }}
+              className="hover:text-pink-600"
+            >
+              Logout
+            </Link>
           </div>
 
           <button onClick={() => setIsOpen(!isOpen)} className="md:hidden p-2">
@@ -37,6 +49,18 @@ export default function Navbar() {
           <Link href="/dashboard" className="block py-2">Dashboard</Link>
           <Link href="/login" className="block py-2">Login</Link>
           <Link href="/register" className="block py-2">Register</Link>
+          <Link
+            href="#"
+            onClick={(e) => {
+              e.preventDefault();
+              localStorage.removeItem("token"); 
+              localStorage.removeItem("user"); 
+              window.location.href = "/login"; 
+            }}
+            className="hover:text-pink-600"
+          >
+            Logout
+          </Link>
         </div>
       )}
     </nav>
