@@ -16,7 +16,6 @@ model User {
 
   carts Cart[]
 }
-
 model Sweet {
   id        Int      @id @default(autoincrement())
   name      String
@@ -24,27 +23,27 @@ model Sweet {
   category  String
   imageUrl  String?
   createdAt DateTime @default(now())
-  quantity Int @default(0)
+  quantity  Int      @default(0)
 
-  cartItems CartItem[]
+  cartItems CartItem[] 
+}
+
+model CartItem {
+  id       Int   @id @default(autoincrement())
+  cart     Cart  @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  cartId   Int
+  sweet    Sweet @relation(fields: [sweetId], references: [id], onDelete: Cascade) // <--- cascade here
+  sweetId  Int
+  quantity Int   @default(1)
+  price    Int   @default(0)
+
+  @@unique([cartId, sweetId])
 }
 
 model Cart {
   id        Int        @id @default(autoincrement())
   user      User       @relation(fields: [userId], references: [id])
   userId    Int        @unique
-  items     CartItem[]
+  items     CartItem[] 
   createdAt DateTime   @default(now())
-}
-
-model CartItem {
-  id       Int   @id @default(autoincrement())
-  cart     Cart  @relation(fields: [cartId], references: [id])
-  cartId   Int
-  sweet    Sweet @relation(fields: [sweetId], references: [id])
-  sweetId  Int
-  quantity Int   @default(1)
-  price    Int   @default(0)
-
-  @@unique([cartId, sweetId])
 }
