@@ -2,6 +2,12 @@
 
 CHECK THIS OUT AT : https://sweet-shop-nine-cyan.vercel.app/
 
+```
+ADMIN: sujoy@gmail.com
+PASSWORD: 123 
+```
+*Try this out and notify me of the bugs.*
+
 A full-stack e-commerce platform built with **Next.js**, **Prisma**, and **PostgreSQL**, allowing users to browse sweets, manage their cart, and place orders. Admins can manage sweet items (CRUD operations). JWT authentication is used for secure access.
 
 ---
@@ -45,6 +51,20 @@ Sweet Shop is a simple e-commerce platform for sweets. It allows:
 - **State Management:** React `useState`  
 
 ---
+## Runtime Dependencies
+
+| Package                | Version |
+| ---------------------- | ------- |
+| `next`               | 16.0.10 |
+| `react`              | 19.2.1  |
+| `react-dom`          | 19.2.1  |
+| `@prisma/client`     | ^7.1.0  |
+| `@prisma/adapter-pg` | ^7.1.0  |
+| `pg`                 | ^8.16.3 |
+| `jsonwebtoken`       | ^9.0.3  |
+| `bcryptjs`           | ^3.0.3  |
+| `dotenv`             | ^17.2.3 |
+
 
 ## Features
 
@@ -271,3 +291,46 @@ Usage
 - When adding a sweet, admins can attach a picture using any online image URL.
 
 - Only users with role ADMIN can see and perform these actions.
+
+---
+## Future Scope
+
+### E-Commerce Enhancements
+
+* **Multi-item checkout** and **order history** for users.
+* **Order status management** (e.g., Shipped, Delivered).
+* **Cancellation and refunds**.
+
+### Admin Features
+
+* **Advanced admin dashboard** with order filters.
+* **Sales analytics** and **low stock alerts**.
+
+### Security & Authentication
+
+* **Refresh tokens**, **OAuth login**, and **rate limiting**.
+
+### Performance & Scalability
+
+* **Server-side caching**, **pagination**, and **image optimization**.
+
+### Payments & Checkout
+
+* **Payment gateway integration** (e.g., Stripe, Razorpay).
+
+### User Experience
+
+* **Wishlist**, **product reviews**, and **dark mode**.
+
+### Developer Improvements
+
+* **Testing** (Jest, Playwright), **API docs** (Swagger), and **CI/CD**.
+
+---
+
+## Licence
+
+MIT License © 2025 Sujoy Ray
+
+Permission is granted to use, copy, modify, and distribute this software for any purpose, with or without fee, provided the copyright notice is included.
+The software is provided “as is”, without warranty of any kind.
