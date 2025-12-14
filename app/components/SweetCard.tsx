@@ -1,5 +1,6 @@
 'use client';
 import { get, post, put, del } from '@/utils/http';
+import { useRouter } from 'next/navigation';
 
 interface Sweet {
   id: number;
@@ -17,11 +18,12 @@ interface SweetCardProps {
 }
 
 export default function SweetCard({ sweet, isAdmin = false, onEdit, onDelete }: SweetCardProps) {
-  
+  const router = useRouter();
+
   const handleAddToCart = async (sweetId: number) => {
     const token = localStorage.getItem("token");
     if (!token) {
-      alert("Please login first!");
+      router.push("/login"); // Redirect to login if not logged in
       return;
     }
 
