@@ -1,34 +1,70 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+
+interface User {
+  role: 'ADMIN' | 'USER';
+}
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+    }
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    window.location.href = '/login';
+  };
 
   return (
     <nav className="bg-white/60 backdrop-blur-md sticky top-0 z-30 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16 items-center">
-          <Link href="/" className="text-2xl font-bold text-pink-700">Sweet Treats</Link>
+          <Link href="/" className="text-2xl font-bold text-pink-700">
+            Sweet Treats
+          </Link>
 
-          <div className="hidden md:flex gap-4">
+          <div className="hidden md:flex gap-4 items-center">
             <Link href="/" className="hover:text-pink-600">Home</Link>
-            <Link href="/dashboard" className="hover:text-pink-600">Dashboard</Link>
-            <Link href="/login" className="hover:text-pink-600">Login</Link>
-            <Link href="/register" className="hover:text-pink-600">Register</Link>
-            <Link
-              href="#"
-              onClick={(e) => {
-                e.preventDefault();
-                localStorage.removeItem("token");
-                localStorage.removeItem("user");
-                window.location.href = "/login";
-              }}
-              className="hover:text-pink-600"
-            >
-              Logout
-            </Link>
+
+            {user && (
+              <Link href="/dashboard" className="hover:text-pink-600">
+                Dashboard
+              </Link>
+            )}
+
+            {user?.role === 'ADMIN' && (
+              <Link
+                href="/dashboard/admin/orders"
+                className="hover:text-pink-600 font-semibold"
+              >
+                Orders
+              </Link>
+            )}
+
+            {!user && (
+              <>
+                <Link href="/login" className="hover:text-pink-600">Login</Link>
+                <Link href="/register" className="hover:text-pink-600">Register</Link>
+              </>
+            )}
+
+            {user && (
+              <button
+                onClick={handleLogout}
+                className="hover:text-pink-600"
+              >
+                Logout
+              </button>
+            )}
           </div>
 
           <button onClick={() => setIsOpen(!isOpen)} className="md:hidden p-2">
@@ -44,23 +80,39 @@ export default function Navbar() {
       </div>
 
       {isOpen && (
-        <div className="md:hidden bg-white/95 px-4 pt-2 pb-4">
-          <Link href="/" className="block py-2">Home</Link>
-          <Link href="/dashboard" className="block py-2">Dashboard</Link>
-          <Link href="/login" className="block py-2">Login</Link>
-          <Link href="/register" className="block py-2">Register</Link>
-          <Link
-            href="#"
-            onClick={(e) => {
-              e.preventDefault();
-              localStorage.removeItem("token"); 
-              localStorage.removeItem("user"); 
-              window.location.href = "/login"; 
-            }}
-            className="hover:text-pink-600"
-          >
-            Logout
-          </Link>
+        <div className="md:hidden bg-white/95 px-4 pt-2 pb-4 space-y-2">
+          <Link href="/" className="block">Home</Link>
+
+          {user && (
+            <Link href="/dashboard" className="block">
+              Dashboard
+            </Link>
+          )}
+
+          {user?.role === 'ADMIN' && (
+            <Link
+              href="/dashboard/admin/orders"
+              className="block font-semibold"
+            >
+              Orders
+            </Link>
+          )}
+
+          {!user && (
+            <>
+              <Link href="/login" className="block">Login</Link>
+              <Link href="/register" className="block">Register</Link>
+            </>
+          )}
+
+          {user && (
+            <button
+              onClick={handleLogout}
+              className="block text-left w-full hover:text-pink-600"
+            >
+              Logout
+            </button>
+          )}
         </div>
       )}
     </nav>
