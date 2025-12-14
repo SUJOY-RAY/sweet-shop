@@ -10,6 +10,7 @@ interface Sweet {
   name: string;
   price: number;
   category: string;
+  quantity: number;
   imageUrl?: string;
 }
 

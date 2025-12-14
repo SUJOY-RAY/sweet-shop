@@ -6,40 +6,63 @@ const JWT_SECRET = process.env.JWT_SECRET!;
 
 export async function PUT(req: Request) {
   try {
-    const { cartItemId, quantity } = await req.json();
-    if (!cartItemId || quantity <= 0) {
+    const { cartItemId, quantity: newQty } = await req.json();
+    if (!cartItemId || newQty <= 0) {
       return NextResponse.json({ error: "Invalid request" }, { status: 400 });
     }
 
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (!authHeader)
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const token = authHeader.split(" ")[1];
-    let decoded: any;
-    try {
-      decoded = jwt.verify(token, JWT_SECRET);
-    } catch {
-      return NextResponse.json({ error: "Invalid token" }, { status: 401 });
-    }
+    const decoded: any = jwt.verify(token, JWT_SECRET);
 
     const userId = decoded.id;
 
-    const cart = await prisma.cart.findUnique({
-      where: { userId },
-      include: { items: { include: { sweet: true } } },
-    });
-    if (!cart) return NextResponse.json({ error: "Cart not found" }, { status: 404 });
-
-    const item = cart.items.find(i => i.id === cartItemId);
-    if (!item) return NextResponse.json({ error: "Item not found" }, { status: 404 });
-
-    await prisma.cartItem.update({
+    const item = await prisma.cartItem.findUnique({
       where: { id: cartItemId },
-      data: {
-        quantity,
-        price: item.sweet.price * quantity,
+      include: {
+        sweet: true,
+        cart: true,
       },
     });
+
+    if (!item || item.cart.userId !== userId) {
+      return NextResponse.json({ error: "Item not found" }, { status: 404 });
+    }
+
+    const oldQty = item.quantity;
+    const diff = newQty - oldQty;
+
+    // Check stock if increasing
+    if (diff > 0 && item.sweet.quantity < diff) {
+      return NextResponse.json(
+        { error: "Not enough stock" },
+        { status: 400 }
+      );
+    }
+
+    await prisma.$transaction([
+      // update sweet stock
+      prisma.sweet.update({
+        where: { id: item.sweetId },
+        data: {
+          quantity: {
+            increment: -diff, // negative diff adds back stock
+          },
+        },
+      }),
+
+      // update cart item
+      prisma.cartItem.update({
+        where: { id: cartItemId },
+        data: {
+          quantity: newQty,
+          price: item.sweet.price * newQty,
+        },
+      }),
+    ]);
 
     return NextResponse.json({ success: true });
   } catch (err) {

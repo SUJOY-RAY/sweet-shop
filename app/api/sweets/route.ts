@@ -14,7 +14,7 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
-    const { name, price, category, imageUrl } = await req.json();
+    const { name, price, category, quantity, imageUrl } = await req.json();
 
     if (!name || !price || !category) {
       return NextResponse.json(
@@ -26,8 +26,9 @@ export async function POST(req: Request) {
     const sweet = await prisma.sweet.create({
       data: {
         name,
-        price: Number(price),
+        price: parseFloat(price),
         category,
+        quantity: Number(quantity),
         imageUrl,
       },
     });

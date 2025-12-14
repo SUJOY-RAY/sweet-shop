@@ -6,11 +6,11 @@ export async function PUT(req: Request, context: { params: Promise<{ id: string 
   const id = Number(params.id);
 
   try {
-    const { name, price, category, imageUrl } = await req.json();
+    const { name, price, category, quantity, imageUrl } = await req.json();
 
     const updated = await prisma.sweet.update({
       where: { id },
-      data: { name, price: Number(price), category, imageUrl },
+      data: { name, price: Number(price), category, quantity, imageUrl },
     });
 
     return NextResponse.json(updated);

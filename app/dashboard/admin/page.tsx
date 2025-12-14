@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Navbar from '../../components/Navbar';
-import SweetCard from '../../components/SweetCard';
+import Navbar from '@/app/components/Navbar';
+import SweetCard from '@/app/components/SweetCard';
 import { get, post, put, del } from '@/utils/http';
 
 interface Sweet {
@@ -11,35 +11,33 @@ interface Sweet {
   name: string;
   price: number;
   category: string;
+  quantity: number;
   imageUrl?: string;
 }
 
 export default function AdminDashboard() {
   const router = useRouter();
+
   const [sweets, setSweets] = useState<Sweet[]>([]);
   const [loading, setLoading] = useState(true);
+
   const [showForm, setShowForm] = useState(false);
   const [editingSweet, setEditingSweet] = useState<Sweet | null>(null);
 
   const [name, setName] = useState('');
   const [price, setPrice] = useState('');
   const [category, setCategory] = useState('');
+  const [quantity, setQuantity] = useState('');
   const [imageUrl, setImageUrl] = useState('');
 
   const [token, setToken] = useState<string | null>(null);
 
-  // Set token on client side only
+  /* -------------------- AUTH CHECK -------------------- */
   useEffect(() => {
     const t = localStorage.getItem('token');
-    setToken(t);
-  }, []);
-
-  // Auth + fetch sweets
-  useEffect(() => {
-    if (!token) return;
-
     const userRaw = localStorage.getItem('user');
-    if (!userRaw) {
+
+    if (!t || !userRaw) {
       router.push('/login');
       return;
     }
@@ -50,14 +48,19 @@ export default function AdminDashboard() {
       return;
     }
 
+    setToken(t);
+  }, [router]);
+
+  /* -------------------- FETCH SWEETS -------------------- */
+  useEffect(() => {
+    if (!token) return;
     fetchSweets();
-  }, [token, router]);
+  }, [token]);
 
   const fetchSweets = async () => {
     setLoading(true);
     try {
-      if (!token) return;
-      const data = await get<Sweet[]>('/api/sweets', token);
+      const data = await get<Sweet[]>('/api/sweets', token!);
       setSweets(data);
     } catch (err) {
       console.error(err);
@@ -66,82 +69,116 @@ export default function AdminDashboard() {
     }
   };
 
+  /* -------------------- DELETE -------------------- */
   const handleDelete = async (id: number) => {
-    if (!confirm('Are you sure you want to delete this sweet?')) return;
+    if (!confirm('Delete this sweet?')) return;
     try {
-      if (!token) return;
-      await del(`/api/sweets/${id}`, token);
+      await del(`/api/sweets/${id}`, token!);
       setSweets(prev => prev.filter(s => s.id !== id));
     } catch (err) {
       console.error(err);
     }
   };
 
+  /* -------------------- EDIT -------------------- */
   const handleEdit = (sweet: Sweet) => {
     setEditingSweet(sweet);
     setName(sweet.name);
-    setPrice(sweet.price.toString());
+    setPrice(String(sweet.price));
     setCategory(sweet.category);
+    setQuantity(String(sweet.quantity));
     setImageUrl(sweet.imageUrl || '');
     setShowForm(true);
   };
 
-  const handleFormSubmit = async (e: React.FormEvent) => {
+  /* -------------------- SUBMIT FORM -------------------- */
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!token) return;
 
-    const payload = { name, price: parseFloat(price), category, imageUrl };
+    const payload = {
+      name,
+      price: parseFloat(price),
+      category,
+      quantity: parseInt(quantity),
+      imageUrl,
+    };
 
     try {
       if (editingSweet) {
-        const updated = await put<Sweet>(`/api/sweets/${editingSweet.id}`, payload, token);
-        setSweets(prev => prev.map(s => s.id === updated.id ? updated : s));
+        const updated = await put<Sweet>(
+          `/api/sweets/${editingSweet.id}`,
+          payload,
+          token!
+        );
+        setSweets(prev =>
+          prev.map(s => (s.id === updated.id ? updated : s))
+        );
       } else {
-        const newSweet = await post<Sweet>('/api/sweets', payload, token);
-        setSweets(prev => [newSweet, ...prev]);
+        const created = await post<Sweet>(
+          '/api/sweets',
+          payload,
+          token!
+        );
+        setSweets(prev => [created, ...prev]);
       }
 
-      setEditingSweet(null);
-      setShowForm(false);
-      setName('');
-      setPrice('');
-      setCategory('');
-      setImageUrl('');
+      resetForm();
     } catch (err) {
       console.error(err);
     }
   };
 
+  const resetForm = () => {
+    setShowForm(false);
+    setEditingSweet(null);
+    setName('');
+    setPrice('');
+    setCategory('');
+    setQuantity('');
+    setImageUrl('');
+  };
+
+  /* -------------------- UI -------------------- */
   return (
     <div className="min-h-screen bg-pink-50">
       <Navbar />
-      <main className="max-w-7xl mx-auto px-6 py-12">
+
+      <main className="max-w-7xl mx-auto px-6 py-10">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold text-pink-700">Admin – Manage Sweets</h1>
-          <button 
-            className="bg-pink-600 text-white px-4 py-2 rounded"
-            onClick={() => { setShowForm(true); setEditingSweet(null); }}
+          <h1 className="text-3xl font-bold text-pink-700">
+            Admin – Manage Sweets
+          </h1>
+
+          <button
+            onClick={() => {
+              resetForm();
+              setShowForm(true);
+            }}
+            className="bg-pink-600 text-white px-4 py-2 rounded hover:bg-pink-700"
           >
             Add Sweet
           </button>
         </div>
 
+        {/* ---------- FORM MODAL ---------- */}
         {showForm && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <form 
-              onSubmit={handleFormSubmit} 
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <form
+              onSubmit={handleSubmit}
               className="bg-white p-6 rounded-lg w-full max-w-md shadow-lg"
             >
-              <h2 className="text-2xl font-bold mb-4">{editingSweet ? 'Edit Sweet' : 'Add Sweet'}</h2>
-              
+              <h2 className="text-xl font-bold mb-4">
+                {editingSweet ? 'Edit Sweet' : 'Add Sweet'}
+              </h2>
+
               <input
-                type="text"
                 placeholder="Name"
                 value={name}
                 onChange={e => setName(e.target.value)}
                 className="w-full p-2 mb-3 border rounded"
                 required
               />
+
               <input
                 type="number"
                 placeholder="Price"
@@ -150,33 +187,43 @@ export default function AdminDashboard() {
                 className="w-full p-2 mb-3 border rounded"
                 required
               />
+
               <input
-                type="text"
                 placeholder="Category"
                 value={category}
                 onChange={e => setCategory(e.target.value)}
                 className="w-full p-2 mb-3 border rounded"
                 required
               />
+
               <input
-                type="text"
+                type="number"
+                placeholder="Quantity"
+                value={quantity}
+                onChange={e => setQuantity(e.target.value)}
+                className="w-full p-2 mb-3 border rounded"
+                required
+              />
+
+              <input
                 placeholder="Image URL"
                 value={imageUrl}
                 onChange={e => setImageUrl(e.target.value)}
-                className="w-full p-2 mb-3 border rounded"
+                className="w-full p-2 mb-4 border rounded"
               />
-              
+
               <div className="flex justify-end gap-2">
                 <button
                   type="button"
-                  className="px-4 py-2 rounded border"
-                  onClick={() => setShowForm(false)}
+                  onClick={resetForm}
+                  className="px-4 py-2 border rounded"
                 >
                   Cancel
                 </button>
-                <button 
-                  type="submit" 
-                  className="px-4 py-2 rounded bg-pink-600 text-white"
+
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-pink-600 text-white rounded"
                 >
                   {editingSweet ? 'Update' : 'Add'}
                 </button>
@@ -185,17 +232,22 @@ export default function AdminDashboard() {
           </div>
         )}
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
-          {loading ? 'Loading...' : sweets.map(s => (
-            <SweetCard 
-              key={s.id} 
-              sweet={s} 
-              isAdmin 
-              onEdit={() => handleEdit(s)} 
-              onDelete={() => handleDelete(s.id)}
-            />
-          ))}
-        </div>
+        {/* ---------- SWEETS GRID ---------- */}
+        {loading ? (
+          <p>Loading...</p>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+            {sweets.map(s => (
+              <SweetCard
+                key={s.id}
+                sweet={s}
+                isAdmin
+                onEdit={() => handleEdit(s)}
+                onDelete={() => handleDelete(s.id)}
+              />
+            ))}
+          </div>
+        )}
       </main>
     </div>
   );
