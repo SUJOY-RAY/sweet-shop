@@ -26,9 +26,18 @@ export default function AdminDashboard() {
   const [category, setCategory] = useState('');
   const [imageUrl, setImageUrl] = useState('');
 
-  const token = localStorage.getItem('token');
+  const [token, setToken] = useState<string | null>(null);
 
+  // Set token on client side only
   useEffect(() => {
+    const t = localStorage.getItem('token');
+    setToken(t);
+  }, []);
+
+  // Auth + fetch sweets
+  useEffect(() => {
+    if (!token) return;
+
     const userRaw = localStorage.getItem('user');
     if (!userRaw) {
       router.push('/login');
@@ -37,29 +46,31 @@ export default function AdminDashboard() {
 
     const user = JSON.parse(userRaw);
     if (user.role !== 'ADMIN') {
-      router.push('/dashboard/user'); 
+      router.push('/dashboard/user');
       return;
     }
 
     fetchSweets();
-  }, [router]);
+  }, [token, router]);
 
-  async function fetchSweets() {
+  const fetchSweets = async () => {
     setLoading(true);
     try {
-      const data = await get<Sweet[]>('/api/sweets', token || '');
+      if (!token) return;
+      const data = await get<Sweet[]>('/api/sweets', token);
       setSweets(data);
     } catch (err) {
       console.error(err);
     } finally {
       setLoading(false);
     }
-  }
+  };
 
   const handleDelete = async (id: number) => {
     if (!confirm('Are you sure you want to delete this sweet?')) return;
     try {
-      await del(`/api/sweets/${id}`, token || '');
+      if (!token) return;
+      await del(`/api/sweets/${id}`, token);
       setSweets(prev => prev.filter(s => s.id !== id));
     } catch (err) {
       console.error(err);
@@ -77,14 +88,16 @@ export default function AdminDashboard() {
 
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!token) return;
+
     const payload = { name, price: parseFloat(price), category, imageUrl };
 
     try {
       if (editingSweet) {
-        const updated = await put<Sweet>(`/api/sweets/${editingSweet.id}`, payload, token || '');
+        const updated = await put<Sweet>(`/api/sweets/${editingSweet.id}`, payload, token);
         setSweets(prev => prev.map(s => s.id === updated.id ? updated : s));
       } else {
-        const newSweet = await post<Sweet>('/api/sweets', payload, token || '');
+        const newSweet = await post<Sweet>('/api/sweets', payload, token);
         setSweets(prev => [newSweet, ...prev]);
       }
 
@@ -94,7 +107,6 @@ export default function AdminDashboard() {
       setPrice('');
       setCategory('');
       setImageUrl('');
-
     } catch (err) {
       console.error(err);
     }
