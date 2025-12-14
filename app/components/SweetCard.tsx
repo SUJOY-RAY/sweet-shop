@@ -28,6 +28,7 @@ export default function SweetCard({
 }: SweetCardProps) {
   const router = useRouter();
   const [role, setRole] = useState<string | null>(null);
+  const [localQuantity, setLocalQuantity] = useState(sweet.quantity);
 
   useEffect(() => {
     const userRaw = localStorage.getItem('user');
@@ -44,6 +45,11 @@ export default function SweetCard({
       return;
     }
 
+    if (localQuantity <= 0) {
+      alert('Out of stock!');
+      return;
+    }
+
     try {
       const data = await post<{ success: boolean; error?: string }>(
         '/api/cart/add',
@@ -51,8 +57,12 @@ export default function SweetCard({
         token
       );
 
-      if (data.success) alert('Added to cart!');
-      else alert(data.error || 'Failed to add to cart');
+      if (data.success) {
+        setLocalQuantity(prev => prev - 1);
+        alert('Added to cart!');
+      } else {
+        alert(data.error || 'Failed to add to cart');
+      }
     } catch (err) {
       console.error(err);
       alert('Something went wrong');
@@ -78,7 +88,7 @@ export default function SweetCard({
       <h3 className="font-bold text-lg">{sweet.name}</h3>
       <p className="text-pink-500 font-semibold mb-2">₹{sweet.price}</p>
       <span className="text-gray-500 text-sm">{sweet.category}</span>
-      <span className="text-gray-500 text-sm">Qty: {sweet.quantity}</span>
+      <span className="text-gray-500 text-sm">Qty: {localQuantity}</span>
 
       {isAdmin && (
         <div className="flex gap-2 mt-3">
@@ -97,7 +107,7 @@ export default function SweetCard({
         </div>
       )}
 
-      {!isAdmin && role === 'USER' && sweet.quantity > 0 && (
+      {!isAdmin && role === 'USER' && localQuantity > 0 && (
         <button
           onClick={handleAddToCart}
           className="mt-3 bg-pink-600 text-white px-4 py-1 rounded hover:opacity-90"
