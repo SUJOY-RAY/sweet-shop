@@ -70,7 +70,7 @@ model OrderItem {
   sweet    Sweet  @relation(fields: [sweetId], references: [id])
   sweetId  Int
   quantity Int
-  price    Float  // total price for this item (sweet.price * quantity)
+  price    Float  
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
