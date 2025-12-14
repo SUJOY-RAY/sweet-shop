@@ -24,7 +24,7 @@ A full-stack e-commerce platform built with **Next.js**, **Prisma**, and **Postg
 - [Usage](#usage)
 - [Folder Structure](#folder-structure)
 - [Future Improvements](#future-improvements)
-- [License](#license)
+- [License](#licence)
 
 ---
 
@@ -293,7 +293,8 @@ Usage
 - Only users with role ADMIN can see and perform these actions.
 
 ---
-## Future Scope
+
+## Future Improvements
 
 ### E-Commerce Enhancements
 
