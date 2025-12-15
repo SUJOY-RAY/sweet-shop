@@ -21,6 +21,8 @@ export default function AdminDashboard() {
   const [sweets, setSweets] = useState<Sweet[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const [searchTerm, setSearchTerm] = useState('');
+
   const [showForm, setShowForm] = useState(false);
   const [editingSweet, setEditingSweet] = useState<Sweet | null>(null);
 
@@ -66,6 +68,11 @@ export default function AdminDashboard() {
       setLoading(false);
     }
   };
+
+  const filteredSweets = sweets.filter(s =>
+    s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    s.category.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   const handleDelete = async (id: number) => {
     if (!confirm('Delete this sweet?')) return;
@@ -154,6 +161,19 @@ export default function AdminDashboard() {
           </button>
         </div>
 
+        {/* Search Bar */}
+        <div className="mb-6 max-w-md">
+          <input
+            type="text"
+            placeholder="Search sweets..."
+            value={searchTerm}
+            onChange={e => setSearchTerm(e.target.value)}
+            className="w-full px-4 py-2 rounded-lg border border-pink-300
+                       focus:outline-none focus:ring-2 focus:ring-pink-400
+                       text-pink-700 placeholder-pink-400"
+          />
+        </div>
+
         {showForm && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
             <form
@@ -227,9 +247,11 @@ export default function AdminDashboard() {
 
         {loading ? (
           <p>Loading...</p>
+        ) : filteredSweets.length === 0 ? (
+          <p className="text-pink-500">No sweets match your search.</p>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
-            {sweets.map(s => (
+            {filteredSweets.map(s => (
               <SweetCard
                 key={s.id}
                 sweet={s}

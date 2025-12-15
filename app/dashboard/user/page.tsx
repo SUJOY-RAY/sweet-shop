@@ -28,6 +28,7 @@ export default function UserDashboard() {
   const router = useRouter();
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
 
   const getToken = () =>
     typeof window !== 'undefined' ? localStorage.getItem('token') : null;
@@ -52,6 +53,11 @@ export default function UserDashboard() {
 
     fetchCart();
   }, [router]);
+
+  const filteredItems = cartItems.filter(item =>
+    item.sweet.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    item.sweet.category.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   const handleRemove = async (itemId: number) => {
     const token = getToken();
@@ -80,13 +86,28 @@ export default function UserDashboard() {
           Your Cart
         </h1>
 
+        {/* Search Bar */}
+        <div className="mb-6 max-w-md">
+          <input
+            type="text"
+            placeholder="Search sweets..."
+            value={searchTerm}
+            onChange={e => setSearchTerm(e.target.value)}
+            className="w-full px-4 py-2 rounded-lg border border-pink-300
+                       focus:outline-none focus:ring-2 focus:ring-pink-400
+                       text-pink-700 placeholder-pink-400"
+          />
+        </div>
+
         {loading ? (
           <p className="text-pink-500">Loading your cart...</p>
         ) : cartItems.length === 0 ? (
           <p className="text-pink-500">Your cart is empty.</p>
+        ) : filteredItems.length === 0 ? (
+          <p className="text-pink-500">No sweets match your search.</p>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {cartItems.map(item => (
+            {filteredItems.map(item => (
               <CartCard
                 key={item.id}
                 item={item}
